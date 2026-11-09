@@ -33,3 +33,4 @@ class Match:
     score: int
     skills: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    profile: str = "default"

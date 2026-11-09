@@ -107,3 +107,32 @@ def test_valencia_gets_location_bonus(profile):
 def test_web_server_administrator_is_a_target_role(profile):
     job = make_job("Web Server Administrator", location="за кордоном, віддалено", description="Linux Nginx Bash")
     assert rejection_reason(job, profile) is None
+
+
+def test_wordpress_job_goes_to_web_profile(profiles):
+    job = make_job(
+        "Junior WordPress Developer", location="за кордоном, віддалено", description="PHP, WordPress, WooCommerce, JS"
+    )
+    match = rank([job], profiles)[0]
+    assert match.profile == "web"
+    assert {"php", "wordpress", "woocommerce", "javascript"} <= set(match.skills)
+
+
+def test_devops_job_goes_to_devops_profile(profiles):
+    job = make_job("Junior DevOps Engineer", description="AWS Terraform Linux Docker")
+    assert rank([job], profiles)[0].profile == "devops"
+
+
+def test_fullstack_laravel_title_is_web(web_profile):
+    job = make_job("Middle Fullstack Developer (Laravel + Vue)", description="PHP Laravel Vue.js MySQL REST API")
+    match = score(job, web_profile)
+    assert match is not None and "laravel" in match.skills and "vue" in match.skills
+
+
+def test_shared_filters_apply_to_every_profile(web_profile):
+    job = make_job("PHP Developer", description="PHP WordPress for an online casino")
+    assert "red flag: casino" == rejection_reason(job, web_profile)
+
+
+def test_senior_web_title_is_excluded(web_profile):
+    assert "excluded" in rejection_reason(make_job("Senior Frontend Developer"), web_profile)

@@ -6,6 +6,9 @@ Rules, in order:
 2. Location filter on title + location: remote or an allowed city/region.
 3. Score = weighted skills found in the full text + title bonuses + text penalties.
 4. Keep the job if score >= min_score.
+
+Several profiles (directions) can be configured. Each job is scored against all of
+them and kept once, under the profile where it scores best.
 """
 
 from __future__ import annotations
@@ -17,9 +20,13 @@ from .models import Job, Match
 from .text import contains, find_terms, norm
 from .vocabulary import aliases
 
+_COMMON = ("red_flags", "allowed_locations", "location_bonus", "penalties")
+
 
 @dataclass
 class Profile:
+    name: str = "default"
+    label: str = ""
     min_score: int = 4
     title_keywords: list[str] = field(default_factory=list)
     exclude_title: list[str] = field(default_factory=list)
@@ -31,8 +38,12 @@ class Profile:
     location_bonus: dict[str, int] = field(default_factory=dict)
 
     @classmethod
-    def from_config(cls, cfg: dict[str, Any]) -> Profile:
+    def from_config(cls, cfg: dict[str, Any], common: dict[str, Any] | None = None, name: str = "default") -> Profile:
+        """Build a profile; shared `filters` apply unless the profile overrides them."""
+        cfg = {**{k: v for k, v in (common or {}).items() if k in _COMMON}, **cfg}
         return cls(
+            name=name,
+            label=str(cfg.get("label") or name),
             min_score=int(cfg.get("min_score", 4)),
             title_keywords=[t.lower() for t in cfg.get("title_keywords", [])],
             exclude_title=[t.lower() for t in cfg.get("exclude_title", [])],
@@ -90,9 +101,24 @@ def score(job: Job, profile: Profile) -> Match | None:
 
     if total < profile.min_score:
         return None
-    return Match(job=job, score=total, skills=skills, notes=notes)
+    return Match(job=job, score=total, skills=skills, notes=notes, profile=profile.name)
 
 
-def rank(jobs: list[Job], profile: Profile) -> list[Match]:
-    matches = [m for j in jobs if (m := score(j, profile))]
+def load_profiles(cfg: dict[str, Any]) -> list[Profile]:
+    """Read `profiles` (several directions) or the older single `profile` block."""
+    if cfg.get("profiles"):
+        common = cfg.get("filters") or {}
+        return [Profile.from_config(p or {}, common, name) for name, p in cfg["profiles"].items()]
+    return [Profile.from_config(cfg.get("profile") or {})]
+
+
+def best_match(job: Job, profiles: list[Profile]) -> Match | None:
+    matches = [m for p in profiles if (m := score(job, p))]
+    return max(matches, key=lambda m: m.score) if matches else None
+
+
+def rank(jobs: list[Job], profiles: Profile | list[Profile]) -> list[Match]:
+    if isinstance(profiles, Profile):
+        profiles = [profiles]
+    matches = [m for j in jobs if (m := best_match(j, profiles))]
     return sorted(matches, key=lambda m: m.score, reverse=True)

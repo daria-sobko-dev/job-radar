@@ -29,16 +29,33 @@ def _item(m: Match) -> str:
 
 
 def build_messages(
-    matches: list[Match], today: date, failures: list[str] | None = None, total_new: int = 0
+    matches: list[Match],
+    today: date,
+    failures: list[str] | None = None,
+    total_new: int = 0,
+    window_hours: int | None = None,
+    sections: list[tuple[str, str]] | None = None,
 ) -> list[str]:
-    """Return one or more HTML messages, each under Telegram's size limit."""
-    header = f"<b>Job Radar · {today.isoformat()}</b>\n"
-    if matches:
-        header += f"{len(matches)} match(es) out of {total_new} new vacancies\n"
-    else:
-        header += f"No new matches today ({total_new} new vacancies checked)\n"
+    """Return one or more HTML messages, each under Telegram's size limit.
 
-    blocks = [_item(m) for m in matches]
+    With `sections` [(profile_name, label), ...] the matches are grouped under a heading per profile.
+    """
+    header = f"<b>Job Radar · {today.isoformat()}</b>\n"
+    period = f" from the last {window_hours}h" if window_hours else ""
+    if matches:
+        header += f"{len(matches)} match(es) out of {total_new} new vacancies{period}\n"
+    else:
+        header += f"No new matches today ({total_new} new vacancies{period} checked)\n"
+
+    if sections:
+        blocks = []
+        for name, label in sections:
+            group = [m for m in matches if m.profile == name]
+            if group:
+                blocks.append(f"<b>━━ {html.escape(label, quote=False)} ({len(group)}) ━━</b>")
+                blocks.extend(_item(m) for m in group)
+    else:
+        blocks = [_item(m) for m in matches]
     if failures:
         blocks.append("<i>Sources with errors: " + html.escape(", ".join(failures)) + "</i>")
 

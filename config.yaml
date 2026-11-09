@@ -3,17 +3,29 @@
 state_file: data/seen.json
 keep_days: 90            # forget jobs older than this (keeps the state file small)
 
+# Only vacancies published in the last N hours. 26 = one day plus a margin,
+# because GitHub can start the daily run a little late. Jobs already sent
+# are remembered in data/seen.json, so the margin never causes repeats.
+max_age_hours: 26
+
 digest:
-  max_items: 15          # top N matches per day
+  max_items: 15          # top N matches per profile per day
   send_when_empty: true  # send a short "no matches" message so you know the bot ran
 
 sources:
   # DOU RSS feeds. Open https://jobs.dou.ua/vacancies/, set the filters you want,
   # click the RSS icon and paste the feed URL here.
   dou:
+    # DevOps / Cloud
     - https://jobs.dou.ua/vacancies/feeds/?category=DevOps
     - https://jobs.dou.ua/vacancies/feeds/?search=cloud+engineer
     - https://jobs.dou.ua/vacancies/feeds/?search=linux+administrator
+    # Web: PHP, WordPress, Laravel, Frontend, Fullstack
+    - https://jobs.dou.ua/vacancies/feeds/?category=PHP
+    - https://jobs.dou.ua/vacancies/feeds/?category=Front+End
+    - https://jobs.dou.ua/vacancies/feeds/?search=wordpress
+    - https://jobs.dou.ua/vacancies/feeds/?search=laravel
+    - https://jobs.dou.ua/vacancies/feeds/?search=fullstack
 
   # Greenhouse boards: the token is the part after job-boards.greenhouse.io/
   greenhouse:
@@ -25,38 +37,8 @@ sources:
   #  - company: example
   #    name: Example Inc
 
-profile:
-  min_score: 4
-
-  # The title must contain at least one of these.
-  title_keywords:
-    - devops
-    - cloud
-    - sre
-    - site reliability
-    - infrastructure
-    - platform engineer
-    - linux
-    - sysadmin
-    - system administrator
-    - systems administrator
-    - systems engineer
-    - administrator
-    - системний адміністратор
-    - адміністратор
-
-  # Titles with any of these are skipped.
-  exclude_title:
-    - senior
-    - sr.
-    - lead
-    - principal
-    - staff
-    - head
-    - manager
-    - director
-    - architect
-
+# Rules shared by every profile.
+filters:
   # Red flags: a vacancy that mentions any of these anywhere (title, company,
   # description) is skipped. Add industries or conditions you never want to see.
   red_flags:
@@ -99,47 +81,6 @@ profile:
     - anywhere
     - worldwide
 
-  # Skills found anywhere in the vacancy add their weight to the score.
-  # Regenerate from your resume: python -m jobradar.resume resume.pdf --write
-  # BEGIN skills (generated from Daria_Sobko_DevOps_Engineer.pdf by: python -m jobradar.resume)
-  skills:
-    apache: 2
-    aws: 2
-    bash: 2
-    "ci/cd": 2
-    dns: 2
-    docker: 2
-    docker compose: 2
-    ec2: 2
-    firewall: 2
-    git: 2
-    github actions: 2
-    grafana: 2
-    linux: 2
-    nginx: 2
-    postgresql: 2
-    prometheus: 2
-    python: 2
-    redis: 2
-    terraform: 2
-    tls: 2
-    traefik: 2
-    vpn: 2
-    ansible: 1
-    gitlab ci: 1
-    iam: 1
-    kubernetes: 1
-    mysql: 1
-    s3: 1
-    systemd: 1
-  # END skills
-
-  # Extra points when the title contains these.
-  title_bonus:
-    junior: 3
-    middle: 1
-    trainee: 1
-
   # Extra points when the title or location says you can work from Spain / the EU.
   location_bonus:
     valencia: 5
@@ -159,3 +100,131 @@ profile:
     "24/7": -2
     night shifts: -2
     on-call: -1
+
+# One profile per direction. A vacancy is scored against every profile and
+# reported once, under the profile where it scores best.
+profiles:
+  devops:
+    label: DevOps / Cloud
+    min_score: 4
+
+    # The title must contain at least one of these.
+    title_keywords:
+      - devops
+      - cloud
+      - sre
+      - site reliability
+      - infrastructure
+      - platform engineer
+      - linux
+      - sysadmin
+      - system administrator
+      - systems administrator
+      - systems engineer
+      - administrator
+      - системний адміністратор
+      - адміністратор
+
+    # Titles with any of these are skipped.
+    exclude_title: &seniority
+      - senior
+      - sr.
+      - lead
+      - principal
+      - staff
+      - head
+      - manager
+      - director
+      - architect
+
+    # Skills found anywhere in the vacancy add their weight to the score.
+    # Regenerate from your resume: python -m jobradar.resume resume.pdf --profile devops --write
+    # BEGIN skills devops
+    skills:
+      apache: 2
+      aws: 2
+      bash: 2
+      "ci/cd": 2
+      dns: 2
+      docker: 2
+      docker compose: 2
+      ec2: 2
+      firewall: 2
+      git: 2
+      github actions: 2
+      grafana: 2
+      linux: 2
+      nginx: 2
+      postgresql: 2
+      prometheus: 2
+      python: 2
+      redis: 2
+      terraform: 2
+      tls: 2
+      traefik: 2
+      vpn: 2
+      ansible: 1
+      gitlab ci: 1
+      iam: 1
+      kubernetes: 1
+      mysql: 1
+      s3: 1
+      systemd: 1
+    # END skills devops
+
+    # Extra points when the title contains these.
+    title_bonus: &level
+      junior: 3
+      middle: 1
+      trainee: 1
+
+  web:
+    label: Web / PHP / Frontend
+    min_score: 4
+
+    title_keywords:
+      - wordpress
+      - php
+      - laravel
+      - frontend
+      - front-end
+      - front end
+      - fullstack
+      - full-stack
+      - full stack
+      - web developer
+      - web engineer
+      - javascript developer
+      - react developer
+      - веб-розробник
+      - верстальник
+
+    exclude_title: *seniority
+
+    # Regenerate from your resume: python -m jobradar.resume resume.pdf --profile web --write
+    # BEGIN skills web
+    skills:
+      php: 2
+      wordpress: 2
+      laravel: 2
+      javascript: 2
+      react: 2
+      woocommerce: 2
+      html: 1
+      css: 1
+      scss: 1
+      typescript: 1
+      next.js: 1
+      vue: 1
+      jquery: 1
+      tailwind: 1
+      node.js: 1
+      mysql: 1
+      rest api: 1
+      webflow: 1
+      figma: 1
+      git: 1
+      docker: 1
+    # END skills web
+
+    title_bonus: *level

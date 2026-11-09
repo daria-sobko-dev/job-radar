@@ -54,3 +54,12 @@ def test_message_shows_salary_and_plain_quotes():
     assert "DevOps &amp; Platform" in msg
     assert "Axon · віддалено · $1100–1500" in msg
     assert "'24/7' -2" in msg and "&#x27;" not in msg
+
+
+def test_digest_is_grouped_by_profile():
+    devops = Match(Job("t", "1", "DevOps", "A", "Remote", "https://a"), 9, profile="devops")
+    web = Match(Job("t", "2", "WordPress Dev", "B", "Remote", "https://b"), 7, profile="web")
+    msg = telegram.build_messages(
+        [devops, web], date(2026, 11, 9), total_new=2, sections=[("devops", "DevOps / Cloud"), ("web", "Web / PHP")]
+    )[0]
+    assert msg.index("DevOps / Cloud (1)") < msg.index("Web / PHP (1)") < msg.index("WordPress Dev")

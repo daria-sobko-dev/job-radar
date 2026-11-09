@@ -1,7 +1,7 @@
 """Known infrastructure skills and the aliases that count as the same skill."""
 
 # Canonical term -> aliases that count as the same skill.
-VOCABULARY: dict[str, list[str]] = {
+INFRA: dict[str, list[str]] = {
     "aws": ["aws", "amazon web services"],
     "ec2": ["ec2"],
     "s3": ["s3"],
@@ -53,6 +53,39 @@ VOCABULARY: dict[str, list[str]] = {
     "sonarqube": ["sonarqube"],
     "vagrant": ["vagrant"],
 }
+
+
+WEB: dict[str, list[str]] = {
+    "php": ["php"],
+    "wordpress": ["wordpress"],
+    "woocommerce": ["woocommerce"],
+    "laravel": ["laravel"],
+    "symfony": ["symfony"],
+    "javascript": ["javascript", "js"],
+    "typescript": ["typescript"],
+    "react": ["react", "react.js", "reactjs"],
+    "next.js": ["next.js", "nextjs"],
+    "vue": ["vue", "vue.js", "vuejs"],
+    "node.js": ["node.js", "nodejs"],
+    "jquery": ["jquery"],
+    "html": ["html", "html5"],
+    "css": ["css", "css3"],
+    "scss": ["scss", "sass"],
+    "tailwind": ["tailwind", "tailwindcss"],
+    "gutenberg": ["gutenberg"],
+    "webflow": ["webflow"],
+    "figma": ["figma"],
+    "mysql": ["mysql"],
+    "rest api": ["rest api", "restful", "rest apis"],
+    "git": ["git"],
+    "docker": ["docker"],
+}
+
+# Vocabulary per profile, used when generating skills from a resume.
+VOCABULARIES: dict[str, dict[str, list[str]]] = {"devops": INFRA, "web": WEB}
+
+# Every known spelling, used when matching skills in vacancies.
+VOCABULARY: dict[str, list[str]] = {**WEB, **INFRA}
 
 
 def aliases(skill: str) -> list[str]:

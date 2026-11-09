@@ -14,6 +14,7 @@ from jobradar.sources import dou, greenhouse, lever
 def workdir(tmp_path, monkeypatch, dou_xml, greenhouse_data, lever_data):
     cfg = yaml.safe_load((Path(__file__).parent.parent / "config.yaml").read_text(encoding="utf-8"))
     cfg["state_file"] = str(tmp_path / "seen.json")
+    cfg.pop("max_age_hours", None)  # fixtures have fixed dates; the age filter is tested separately
     cfg["sources"] = {
         "dou": ["https://feed.example/dou"],
         "greenhouse": [{"board": "dkbcodefactory", "name": "DKB Code Factory"}],
@@ -85,3 +86,46 @@ def test_missing_secrets_is_an_error(workdir, monkeypatch):
     monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
     monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
     assert app.main(["--config", str(workdir / "config.yaml")]) == 2
+
+
+def test_age_filter_drops_old_jobs(workdir, monkeypatch, capsys):
+    from datetime import UTC, datetime
+
+    cfg_path = workdir / "config.yaml"
+    cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
+    cfg["max_age_hours"] = 26
+    cfg_path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+
+    fresh = greenhouse.parse(
+        {
+            "jobs": [
+                {
+                    "id": 1,
+                    "title": "Junior DevOps Engineer",
+                    "location": {"name": "Valencia, Spain"},
+                    "absolute_url": "https://example.com/fresh",
+                    "first_published": datetime.now(UTC).isoformat(),
+                    "content": "AWS Terraform Linux Docker",
+                }
+            ]
+        },
+        "Fresh Co",
+    )
+    monkeypatch.setattr(greenhouse, "fetch", lambda s, b, n=None: fresh)
+    # DOU and Lever fixtures are dated 2026-11-09 08:00 and 2025-11-09: old relative to the run time
+    monkeypatch.setattr(dou, "fetch", lambda s, u: dou.parse(_old_dou()))
+
+    assert app.main(["--config", str(cfg_path), "--dry-run"]) == 0
+    out = capsys.readouterr().out
+    assert "Junior DevOps Engineer" in out and "Fresh Co" in out
+    assert "Acme Cloud" not in out
+    assert "from the last 26h" in out
+
+
+def _old_dou() -> str:
+    return (
+        "<rss><channel><item><title>Junior DevOps Engineer в Acme Cloud, віддалено</title>"
+        "<link>https://jobs.dou.ua/companies/acme/vacancies/1/</link>"
+        "<description>AWS Terraform Linux Docker</description>"
+        "<pubDate>Mon, 01 Jan 2024 08:00:00 +0200</pubDate></item></channel></rss>"
+    )

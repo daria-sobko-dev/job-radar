@@ -7,7 +7,7 @@ import logging
 import os
 import sys
 from collections.abc import Callable
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -15,8 +15,9 @@ import requests
 import yaml
 
 from . import state, telegram
+from .dates import is_recent
 from .models import Job
-from .scoring import Profile, rank, rejection_reason
+from .scoring import load_profiles, rank, rejection_reason
 from .sources import dou, greenhouse, lever
 
 log = logging.getLogger("jobradar")
@@ -70,7 +71,7 @@ def collect(tasks: list[tuple[str, Callable[[], list[Job]]]]) -> tuple[list[Job]
 
 def run(args: argparse.Namespace) -> int:
     cfg = load_config(Path(args.config))
-    profile = Profile.from_config(cfg.get("profile") or {})
+    profiles = load_profiles(cfg)
     digest_cfg = cfg.get("digest") or {}
     state_path = Path(cfg.get("state_file", "data/seen.json"))
     today = date.today()
@@ -82,17 +83,32 @@ def run(args: argparse.Namespace) -> int:
         return 2
 
     jobs, failures = collect(tasks)
+    max_age = cfg.get("max_age_hours")
+    if max_age:
+        now = datetime.now(UTC)
+        before = len(jobs)
+        jobs = [j for j in jobs if is_recent(j.published, float(max_age), now)]
+        log.info("%d of %d jobs published in the last %sh", len(jobs), before, max_age)
     seen = {} if args.ignore_state else state.load(state_path)
     new_jobs = [j for j in jobs if j.key not in seen]
-    matches = rank(new_jobs, profile)[: int(digest_cfg.get("max_items", 15))]
+    per_profile = int(digest_cfg.get("max_items", 15))
+    ranked = rank(new_jobs, profiles)
+    matches = [m for p in profiles for m in [x for x in ranked if x.profile == p.name][:per_profile]]
     log.info("%d fetched, %d new, %d matched", len(jobs), len(new_jobs), len(matches))
 
     if args.explain:
         for job in new_jobs:
-            reason = rejection_reason(job, profile) or "passed filters"
-            print(f"- {job.title} | {job.company} | {job.location} -> {reason}")
+            reasons = "; ".join(f"{p.name}: {rejection_reason(job, p) or 'passed filters'}" for p in profiles)
+            print(f"- {job.title} | {job.company} | {job.location} -> {reasons}")
 
-    messages = telegram.build_messages(matches, today, failures, total_new=len(new_jobs))
+    messages = telegram.build_messages(
+        matches,
+        today,
+        failures,
+        total_new=len(new_jobs),
+        window_hours=int(max_age) if max_age else None,
+        sections=[(p.name, p.label) for p in profiles] if len(profiles) > 1 else None,
+    )
     send_empty = bool(digest_cfg.get("send_when_empty", True))
 
     if args.dry_run:

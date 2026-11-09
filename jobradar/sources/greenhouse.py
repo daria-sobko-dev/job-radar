@@ -26,7 +26,7 @@ def parse(data: dict[str, Any], company: str) -> list[Job]:
                 location=((item.get("location") or {}).get("name") or "").strip(),
                 url=item.get("absolute_url") or "",
                 description=html_to_text(item.get("content")),
-                published=item.get("updated_at"),
+                published=item.get("first_published") or item.get("updated_at"),
             )
         )
     return jobs
