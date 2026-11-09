@@ -1,0 +1,16 @@
+[project]
+name = "job-radar"
+version = "1.0.0"
+description = "Daily digest of vacancies that match a candidate profile, delivered to Telegram"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "BLE"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

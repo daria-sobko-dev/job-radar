@@ -1,0 +1,21 @@
+{
+  "jobs": [
+    {
+      "id": 7645974003,
+      "title": "DevOps Engineer - Credit Cards",
+      "location": {"name": "Valencia, Spain"},
+      "absolute_url": "https://job-boards.greenhouse.io/dkbcodefactory/jobs/7645974003",
+      "updated_at": "2026-11-05T10:00:00-05:00",
+      "content": "&lt;p&gt;AWS, Terraform, Kubernetes, Helm, Prometheus and Grafana. PostgreSQL.&lt;/p&gt;"
+    },
+    {
+      "id": 7000000001,
+      "title": "Engineering Manager DevOps",
+      "location": {"name": "Valencia, Spain"},
+      "absolute_url": "https://job-boards.greenhouse.io/dkbcodefactory/jobs/7000000001",
+      "updated_at": "2026-11-01T10:00:00-05:00",
+      "content": "&lt;p&gt;Lead the DevOps team.&lt;/p&gt;"
+    }
+  ],
+  "meta": {"total": 2}
+}

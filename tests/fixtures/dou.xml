@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Вакансії DevOps</title>
+    <link>https://jobs.dou.ua/vacancies/?category=DevOps</link>
+    <description>Sample feed for tests</description>
+    <item>
+      <title>Junior DevOps Engineer в Acme Cloud, Київ, віддалено</title>
+      <link>https://jobs.dou.ua/companies/acme/vacancies/400001/</link>
+      <description>&lt;p&gt;We use &lt;b&gt;AWS&lt;/b&gt;, Terraform and Docker.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Linux, Bash, Python&lt;/li&gt;&lt;li&gt;GitHub Actions CI/CD&lt;/li&gt;&lt;/ul&gt;</description>
+      <pubDate>Mon, 09 Nov 2026 08:00:00 +0200</pubDate>
+    </item>
+    <item>
+      <title>Senior DevOps Engineer в BigCorp, віддалено</title>
+      <link>https://jobs.dou.ua/companies/bigcorp/vacancies/400002/</link>
+      <description>&lt;p&gt;Kubernetes, AWS, 5+ years&lt;/p&gt;</description>
+      <pubDate>Mon, 09 Nov 2026 09:00:00 +0200</pubDate>
+    </item>
+    <item>
+      <title>DevOps Engineer в OfficeOnly, Львів</title>
+      <link>https://jobs.dou.ua/companies/officeonly/vacancies/400003/</link>
+      <description>&lt;p&gt;AWS, Terraform, Linux, Docker&lt;/p&gt;</description>
+      <pubDate>Mon, 09 Nov 2026 10:00:00 +0200</pubDate>
+    </item>
+  </channel>
+</rss>

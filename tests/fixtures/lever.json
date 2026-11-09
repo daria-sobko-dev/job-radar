@@ -1,0 +1,14 @@
+[
+  {
+    "id": "abc-123",
+    "text": "Cloud Engineer",
+    "categories": {"location": "Remote - Europe", "team": "Infrastructure"},
+    "hostedUrl": "https://jobs.lever.co/example/abc-123",
+    "createdAt": 1762675200000,
+    "descriptionPlain": "Join our platform team.",
+    "lists": [
+      {"text": "Requirements", "content": "<li>AWS and Terraform</li><li>Docker, Linux</li>"}
+    ],
+    "additionalPlain": "Hybrid or remote."
+  }
+]

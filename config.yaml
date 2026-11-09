@@ -1,0 +1,147 @@
+# job-radar configuration. Everything that defines "a good match" lives here.
+
+state_file: data/seen.json
+keep_days: 90            # forget jobs older than this (keeps the state file small)
+
+digest:
+  max_items: 15          # top N matches per day
+  send_when_empty: true  # send a short "no matches" message so you know the bot ran
+
+sources:
+  # DOU RSS feeds. Open https://jobs.dou.ua/vacancies/, set the filters you want,
+  # click the RSS icon and paste the feed URL here.
+  dou:
+    - https://jobs.dou.ua/vacancies/feeds/?category=DevOps
+    - https://jobs.dou.ua/vacancies/feeds/?search=cloud+engineer
+    - https://jobs.dou.ua/vacancies/feeds/?search=linux+administrator
+
+  # Greenhouse boards: the token is the part after job-boards.greenhouse.io/
+  greenhouse:
+    - board: dkbcodefactory
+      name: DKB Code Factory
+
+  # Lever boards: the slug is the part after jobs.lever.co/
+  lever: []
+  #  - company: example
+  #    name: Example Inc
+
+profile:
+  min_score: 4
+
+  # The title must contain at least one of these.
+  title_keywords:
+    - devops
+    - cloud
+    - sre
+    - site reliability
+    - infrastructure
+    - platform engineer
+    - linux
+    - sysadmin
+    - system administrator
+    - systems administrator
+    - systems engineer
+    - системний адміністратор
+    - адміністратор
+
+  # Titles with any of these are skipped.
+  exclude_title:
+    - senior
+    - sr.
+    - lead
+    - principal
+    - staff
+    - head
+    - manager
+    - director
+    - architect
+
+  # Red flags: a vacancy that mentions any of these anywhere (title, company,
+  # description) is skipped. Add industries or conditions you never want to see.
+  red_flags:
+    # gambling / iGaming
+    - igaming
+    - i-gaming
+    - casino
+    - gambling
+    - betting
+    - sportsbook
+    - bookmaker
+    - poker
+    - lottery
+    - sweepstakes
+    - казино
+    - гемблінг
+    - беттінг
+    - букмекер
+    # unpaid or commission-only work
+    - unpaid
+    - commission only
+    - без оплати
+    # more examples, uncomment if needed:
+    # - crypto
+    # - forex
+    # - adult
+
+  # Title or location must mention one of these.
+  allowed_locations:
+    - remote
+    - віддалено
+    - valencia
+    - valència
+    - spain
+    - españa
+    - europe
+    - emea
+    - anywhere
+    - worldwide
+
+  # Skills found anywhere in the vacancy add their weight to the score.
+  # Regenerate from your resume: python -m jobradar.resume resume.pdf --write
+  # BEGIN skills (generated from Daria_Sobko_DevOps_Engineer.pdf by: python -m jobradar.resume)
+  skills:
+    apache: 2
+    aws: 2
+    bash: 2
+    "ci/cd": 2
+    dns: 2
+    docker: 2
+    docker compose: 2
+    ec2: 2
+    firewall: 2
+    git: 2
+    github actions: 2
+    grafana: 2
+    linux: 2
+    nginx: 2
+    postgresql: 2
+    prometheus: 2
+    python: 2
+    redis: 2
+    terraform: 2
+    tls: 2
+    traefik: 2
+    vpn: 2
+    ansible: 1
+    gitlab ci: 1
+    iam: 1
+    kubernetes: 1
+    mysql: 1
+    s3: 1
+    systemd: 1
+  # END skills
+
+  # Extra points when the title contains these.
+  title_bonus:
+    junior: 3
+    middle: 1
+    trainee: 1
+
+  # Points removed when the vacancy text contains these.
+  penalties:
+    "5+ years": -3
+    "4+ years": -2
+    "3+ years": -1
+    "24/7": -2
+    night shifts: -2
+    on-call: -1
