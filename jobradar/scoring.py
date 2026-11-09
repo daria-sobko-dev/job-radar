@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .models import Job, Match
-from .text import contains, find_terms
+from .text import contains, find_terms, norm
 from .vocabulary import aliases
 
 
@@ -28,6 +28,7 @@ class Profile:
     skills: dict[str, int] = field(default_factory=dict)
     title_bonus: dict[str, int] = field(default_factory=dict)
     penalties: dict[str, int] = field(default_factory=dict)
+    location_bonus: dict[str, int] = field(default_factory=dict)
 
     @classmethod
     def from_config(cls, cfg: dict[str, Any]) -> Profile:
@@ -40,22 +41,23 @@ class Profile:
             skills={k.lower(): int(v) for k, v in (cfg.get("skills") or {}).items()},
             title_bonus={k.lower(): int(v) for k, v in (cfg.get("title_bonus") or {}).items()},
             penalties={k.lower(): int(v) for k, v in (cfg.get("penalties") or {}).items()},
+            location_bonus={k.lower(): int(v) for k, v in (cfg.get("location_bonus") or {}).items()},
         )
 
 
 def rejection_reason(job: Job, profile: Profile) -> str | None:
     """Return why a job fails the hard filters, or None if it passes them."""
-    title = job.title.lower()
+    title = norm(job.title)
     if profile.title_keywords and not find_terms(title, profile.title_keywords):
         return "title does not name a target role"
     excluded = find_terms(title, profile.exclude_title)
     if excluded:
         return f"title excluded: {', '.join(excluded)}"
-    flags = find_terms(f"{title}\n{job.company}\n{job.description}".lower(), profile.red_flags)
+    flags = find_terms(norm(f"{title}\n{job.company}\n{job.description}"), profile.red_flags)
     if flags:
         return f"red flag: {', '.join(flags)}"
     if profile.allowed_locations:
-        where = f"{job.title} {job.location}".lower()
+        where = norm(f"{job.title} {job.location}")
         if not find_terms(where, profile.allowed_locations):
             return f"location not allowed: {job.location or 'unknown'}"
     return None
@@ -66,8 +68,9 @@ def score(job: Job, profile: Profile) -> Match | None:
     if rejection_reason(job, profile):
         return None
 
-    title = job.title.lower()
-    text = f"{job.title}\n{job.location}\n{job.description}".lower()
+    title = norm(job.title)
+    where = norm(f"{job.title} {job.location}")
+    text = norm(f"{job.title}\n{job.location}\n{job.description}")
 
     skills = [s for s in profile.skills if any(contains(text, a) for a in aliases(s))]
     total = sum(profile.skills[s] for s in skills)
@@ -76,6 +79,10 @@ def score(job: Job, profile: Profile) -> Match | None:
     for term in find_terms(title, list(profile.title_bonus)):
         total += profile.title_bonus[term]
         notes.append(f"{term} {profile.title_bonus[term]:+d}")
+
+    for term in find_terms(where, list(profile.location_bonus)):
+        total += profile.location_bonus[term]
+        notes.append(f"{term} {profile.location_bonus[term]:+d}")
 
     for term in find_terms(text, list(profile.penalties)):
         total += profile.penalties[term]

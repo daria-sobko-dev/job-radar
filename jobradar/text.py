@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 import re
+import unicodedata
 from functools import lru_cache
 
 _TAG = re.compile(r"<[^>]+>")
@@ -25,6 +26,11 @@ def html_to_text(raw: str | None) -> str:
     text = _SPACES.sub(" ", text)
     text = "\n".join(line.strip() for line in text.splitlines())
     return _NEWLINES.sub("\n\n", text).strip()
+
+
+def norm(text: str) -> str:
+    """Lowercase and fold look-alike characters (e.g. bold Unicode letters) to plain ones."""
+    return unicodedata.normalize("NFKC", text).replace("\xa0", " ").lower()
 
 
 @lru_cache(maxsize=1024)

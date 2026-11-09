@@ -84,3 +84,26 @@ def test_red_flag_in_ukrainian_is_rejected(profile):
 def test_similar_words_are_not_red_flags(profile):
     job = make_job("DevOps Engineer", description="AWS Terraform Linux Docker. Gaming studio, game servers.")
     assert rejection_reason(job, profile) is None
+
+
+def test_fancy_unicode_title_is_normalised(profile):
+    job = make_job("𝗦𝗲𝗻𝗶𝗼𝗿 𝗗𝗲𝘃𝗢𝗽𝘀 𝗘𝗻𝗴𝗶𝗻𝗲𝗲𝗿", description="AWS Terraform")
+    assert rejection_reason(job, profile) == "title excluded: senior"
+
+
+def test_work_from_abroad_is_allowed_and_ranked_higher(profile):
+    abroad = make_job("DevOps Engineer", location="за кордоном, віддалено", description="AWS Terraform Linux")
+    ukraine = make_job("Cloud Engineer", location="Київ, віддалено", description="AWS Terraform Linux")
+    ranked = rank([ukraine, abroad], profile)
+    assert ranked[0].job.title == "DevOps Engineer"
+    assert "за кордоном +4" in ranked[0].notes
+
+
+def test_valencia_gets_location_bonus(profile):
+    match = score(make_job("DevOps Engineer", location="Valencia, Spain", description="AWS Terraform"), profile)
+    assert "valencia +5" in match.notes and "spain +5" in match.notes
+
+
+def test_web_server_administrator_is_a_target_role(profile):
+    job = make_job("Web Server Administrator", location="за кордоном, віддалено", description="Linux Nginx Bash")
+    assert rejection_reason(job, profile) is None

@@ -46,3 +46,11 @@ def test_long_digest_is_split_under_limit():
     assert len(messages) > 1
     assert all(len(m) <= telegram.LIMIT for m in messages)
     assert sum(m.count("<b>7</b>") for m in messages) == 60
+
+
+def test_message_shows_salary_and_plain_quotes():
+    job = Job("dou", "1", "DevOps & Platform", "Axon", "віддалено", "https://x", salary="$1100–1500")
+    msg = telegram.build_messages([Match(job, 9, ["aws"], ["'24/7' -2"])], date(2026, 11, 9), total_new=1)[0]
+    assert "DevOps &amp; Platform" in msg
+    assert "Axon · віддалено · $1100–1500" in msg
+    assert "'24/7' -2" in msg and "&#x27;" not in msg

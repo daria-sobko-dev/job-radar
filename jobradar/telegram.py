@@ -15,16 +15,16 @@ LIMIT = 4000  # Telegram allows 4096 characters per message; keep a margin
 
 def _item(m: Match) -> str:
     j = m.job
-    title = html.escape(j.title)
+    title = html.escape(j.title, quote=False)
     link = f'<a href="{html.escape(j.url, quote=True)}">{title}</a>' if j.url else title
-    where = " · ".join(html.escape(p) for p in (j.company, j.location) if p)
+    where = " · ".join(html.escape(p, quote=False) for p in (j.company, j.location, j.salary) if p)
     lines = [f"<b>{m.score}</b> · {link}"]
     if where:
         lines.append(where)
     if m.skills:
-        lines.append("Skills: " + html.escape(", ".join(m.skills)))
+        lines.append("Skills: " + html.escape(", ".join(m.skills), quote=False))
     if m.notes:
-        lines.append("Notes: " + html.escape(", ".join(m.notes)))
+        lines.append("Notes: " + html.escape(", ".join(m.notes), quote=False))
     return "\n".join(lines)
 
 

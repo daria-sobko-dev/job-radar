@@ -17,6 +17,7 @@ class Job:
     url: str
     description: str = ""
     published: str | None = None
+    salary: str = ""
 
     @property
     def key(self) -> str:

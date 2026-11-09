@@ -41,6 +41,7 @@ profile:
     - system administrator
     - systems administrator
     - systems engineer
+    - administrator
     - системний адміністратор
     - адміністратор
 
@@ -85,6 +86,8 @@ profile:
 
   # Title or location must mention one of these.
   allowed_locations:
+    - за кордоном
+    - abroad
     - remote
     - віддалено
     - valencia
@@ -136,6 +139,17 @@ profile:
     junior: 3
     middle: 1
     trainee: 1
+
+  # Extra points when the title or location says you can work from Spain / the EU.
+  location_bonus:
+    valencia: 5
+    valència: 5
+    spain: 5
+    españa: 5
+    за кордоном: 4
+    abroad: 4
+    europe: 2
+    emea: 2
 
   # Points removed when the vacancy text contains these.
   penalties:
